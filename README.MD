@@ -3,7 +3,7 @@
 This program is used to prove some theorems from programming theory:
 1. Superposition of functions (programs)
 1. Minimization of function
-1. Primitive recursion (WIP, still)
+1. Primitive recursion
 
 ## Running
 Program accepts 3 arguments

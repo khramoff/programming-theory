@@ -82,22 +82,23 @@ def recursion(input: str, output: str):
     f_program.set_exit_point(command_offset + 1)
     offset += f_program.max_register + 1
 
-    resulting_y = offset + n + 3
+    offset += f_program.max_register + 1
+    recur = offset
     # This is here to return result of the recursion after number of loops is sufficient
-    output.writelines(Instruction("T", [resulting_y, 0]).to_command())  # 4
+    output.writelines(Instruction("T", [recur, 0]).to_command())  # 4
     output.writelines(Instruction("J", [0, 0, 0]).to_command())  # 5
 
-    offset += f_program.max_register + 1
     output.writelines(f_program.lines())
 
-    output.writelines(Instruction("J", [n + 1, n + 2, 2]).to_command())  # 5 + f.instruction_count() + 1
-    output.writelines(Instruction("S", [n + 2]).to_command())  # --- + 2
-    command_offset += 2
+    output.writelines(Instruction("T", [recur, n + 3]).to_command())  # 5 + f.instruction_count() + 1
+    output.writelines(Instruction("J", [n + 1, n + 2, 2]).to_command())  # 5 + f.instruction_count() + 2
+    output.writelines(Instruction("S", [n + 2]).to_command())  # --- + 3
+    command_offset += 3
 
     # For recursion purposes copy result of F to input args of G
     # output.close()
-    transpose = [i for i in range(1, g_program.arg_count)]
-    transpose[-1] = resulting_y
+    transpose = [i for i in range(1, g_program.arg_count+1)]
+    transpose[-1] = recur
     transpose[-2] = n + 1
     g_program.offset_registers_from_list(offset, transpose)
     command_offset += len(g_program.offset_instructions)
