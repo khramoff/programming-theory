@@ -64,15 +64,18 @@ def recursion(input: str, output: str):
 
     output = open(output, "w")
 
-    offset = n + 3
-    command_offset = 5
+    res = n + 3
+    offset = n + 4
+    f_result = n + 4
+
+    command_offset = 3
 
     # This set of instructions serves as an entry point for a program
     #  and allows to return result easily without memorizing
     # register/command numbers down the line.
 
-    output.writelines(Instruction("J", [0, 0, 6]).to_command())  # 1
-    output.writelines(Instruction("T", [n + 3, 0]).to_command())  # 2
+    output.writelines(Instruction("J", [0, 0, command_offset + 1]).to_command())  # 1
+    output.writelines(Instruction("T", [res, 0]).to_command())  # 2
     output.writelines(Instruction("J", [0, 0, 0]).to_command())  # 3
 
     f_program.offset_registers_from_list(offset, [i for i in range(1, f_program.arg_count + 1)])
@@ -80,31 +83,30 @@ def recursion(input: str, output: str):
     ic = f_program.instruction_count()
     command_offset += ic
     f_program.set_exit_point(command_offset + 1)
-    offset += f_program.max_register + 1
-
-    offset += f_program.max_register + 1
     recur = offset
-    # This is here to return result of the recursion after number of loops is sufficient
-    output.writelines(Instruction("T", [recur, 0]).to_command())  # 4
-    output.writelines(Instruction("J", [0, 0, 0]).to_command())  # 5
+    offset += f_program.max_register + 1
 
     output.writelines(f_program.lines())
 
-    output.writelines(Instruction("T", [recur, n + 3]).to_command())  # 5 + f.instruction_count() + 1
-    output.writelines(Instruction("J", [n + 1, n + 2, 2]).to_command())  # 5 + f.instruction_count() + 2
-    output.writelines(Instruction("S", [n + 2]).to_command())  # --- + 3
-    command_offset += 3
+    output.writelines(Instruction("T", [recur, res]).to_command())  # 3 + f.instruction_count() + 1
+    output.writelines(Instruction("J", [n + 1, n + 2, 2]).to_command())  # 3 + f.instruction_count() + 2
+    command_offset += 2
 
     # For recursion purposes copy result of F to input args of G
     # output.close()
-    transpose = [i for i in range(1, g_program.arg_count+1)]
-    transpose[-1] = recur
-    transpose[-2] = n + 1
+    transpose = [i for i in range(1, g_program.arg_count + 1)]
+    transpose[-1] = res
+    transpose[-2] = n + 2
     g_program.offset_registers_from_list(offset, transpose)
+    g_program.instructions.insert(0, Instruction("S", [n + 2]))
+    exit_point = command_offset
     command_offset += len(g_program.offset_instructions)
-    g_program.offset_commands(command_offset)
-    g_program.set_exit_point(5 + f_program.instruction_count() + 1)
+    g_program.offset_commands(command_offset + 1)
+    g_program.set_exit_point(command_offset + len(g_program.instructions)+1)
     output.writelines(g_program.lines())
+
+    output.writelines(Instruction("T", [offset, res]).to_command())  # 3 + f.instruction_count() + 1
+    output.writelines(Instruction("J", [0,0, exit_point]).to_command())  # 3 + f.instruction_count() + 2
 
     output.close()
 
